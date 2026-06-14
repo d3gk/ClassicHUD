@@ -11,44 +11,70 @@ import Foundation;
 import CoreAudio;
 import IOKit;
 import IOKit.graphics;
+import CoreGraphics;
+import Darwin;
 
 func GetBrightness() -> Float? {
-    var iterator: io_iterator_t = 0
-
-    guard IOServiceGetMatchingServices(
-        kIOMainPortDefault,
-        IOServiceMatching("IODisplayConnect"),
-        &iterator
-    ) == KERN_SUCCESS else {
+    guard
+        let handle = dlopen(
+            "/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices",
+            RTLD_LAZY
+        )
+    else {
         return nil;
     }
 
     defer { 
-        IOObjectRelease(iterator); 
+        dlclose(handle); 
     }
 
-    var service: io_object_t;
-    repeat {
-        service = IOIteratorNext(iterator);
+    typealias CanChangeBrightness =
+        @convention(c) (CGDirectDisplayID) -> Bool
 
-        if service != 0 {
-            var brightness: Float = 0;
+    typealias GetBrightnessFunc =
+        @convention(c) (CGDirectDisplayID, UnsafeMutablePointer<Float>) -> kern_return_t
 
-            if IODisplayGetFloatParameter(
-                service,
-                0,
-                kIODisplayBrightnessKey as CFString,
-                &brightness
-            ) == KERN_SUCCESS {
-                IOObjectRelease(service);
-                return brightness;
-            }
+    guard
+        let canChangePtr = dlsym(handle, "DisplayServicesCanChangeBrightness"),
+        let getBrightnessPtr = dlsym(handle, "DisplayServicesGetBrightness")
+    else {
+        return nil;
+    }
 
-            IOObjectRelease(service);
-        }
-    } while service != 0;
+    let canChangeBrightness = unsafeBitCast(
+        canChangePtr,
+        to: CanChangeBrightness.self
+    );
 
-    return nil;
+    let getBrightness = unsafeBitCast(
+        getBrightnessPtr,
+        to: GetBrightnessFunc.self
+    );
+
+    var count: UInt32 = 0;
+    guard CGGetActiveDisplayList(0, nil, &count) == .success else {
+        return nil;
+    }
+
+    var displays = [CGDirectDisplayID](repeating: 0, count: Int(count));
+    guard CGGetActiveDisplayList(count, &displays, &count) == .success else {
+        return nil;
+    }
+
+    guard let display = displays.first(where: { CGDisplayIsBuiltin($0) != 0 }) else {
+        return nil;
+    }
+
+    guard canChangeBrightness(display) else {
+        return nil;
+    }
+
+    var brightness: Float = 0;
+    guard getBrightness(display, &brightness) == KERN_SUCCESS else {
+        return nil;
+    }
+
+    return brightness;
 }
 
 func GetVolume() -> Float? {
