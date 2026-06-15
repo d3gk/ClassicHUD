@@ -33,6 +33,27 @@ struct HUD : View {
             case "dim": 
                 RoundedRectangle(cornerRadius: 18)
                     .fill(.black.opacity(0.5));
+            case "3d":
+                ZStack {
+                    EffectView(
+                        material: .fullScreenUI,
+                        blendingMode: .behindWindow,
+                        appearance: .aqua,
+                        state: .active
+                    );
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 18)
+                            .fill(.white);
+                        RoundedRectangle(cornerRadius: 18)
+                            .fill(.black)
+                            .padding(.top, 2)
+                            .padding(.leading, 2);
+                    }.mask {
+                        RoundedRectangle(cornerRadius: 18)
+                            .fill(.clear)
+                            .stroke(.black.opacity(0.5), lineWidth: 2);
+                    }
+                }.clipShape(RoundedRectangle(cornerRadius: 18));
             default:
                 EffectView(material: .hudWindow, state: .active)
                     .clipShape(RoundedRectangle(cornerRadius: 18));
@@ -112,6 +133,27 @@ struct HUD : View {
 }
 
 #Preview {
-    HUD(role: .Volume)
-        .preferredColorScheme(.dark);
+    ZStack {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Rectangle()
+                    .fill(.white)
+                    .frame(width: 150, height: 150);
+                Rectangle()
+                    .fill(.black)
+                    .frame(width: 150, height: 150);
+            }
+            HStack(spacing: 0) {
+                Rectangle()
+                    .fill(.black)
+                    .frame(width: 150, height: 150);
+                Rectangle()
+                    .fill(.white)
+                    .frame(width: 150, height: 150);
+            }
+        }
+        HUD(role: .Volume)
+            .preferredColorScheme(.dark)
+            .padding(10);
+    }
 }

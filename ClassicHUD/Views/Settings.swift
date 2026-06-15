@@ -54,12 +54,18 @@ struct SettingsView : View {
                             .tag("blur");
                         Text("Glass")
                             .tag("glass");
+                        Text("VisionOS")
+                            .tag("3d");
                         Text("Classic")
                             .tag("dim");
                     }.onChange(of: self.bg) {
                         UserDefaults.standard.set(self.bg, forKey: "bg");
                         if (self.bg == "dim") {
                             self.color_scheme = "dark";
+                            UserDefaults.standard.set(self.color_scheme, forKey: "scheme");
+                        }
+                        if (self.bg == "3d") {
+                            self.color_scheme = "light";
                             UserDefaults.standard.set(self.color_scheme, forKey: "scheme");
                         }
                     }
@@ -70,7 +76,10 @@ struct SettingsView : View {
                             .tag("dark");
                         Text("Always Light")
                             .tag("light");
-                    }.disabled(self.bg == "dim")
+                    }.disabled(
+                        (self.bg == "dim") || 
+                        (self.bg == "3d") 
+                    )
                         .onChange(of: self.color_scheme) {
                             UserDefaults.standard.set(self.color_scheme, forKey: "scheme");
                         }
