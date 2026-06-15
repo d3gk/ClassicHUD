@@ -9,6 +9,7 @@ import SwiftUI;
 import AppKit;
 import Foundation;
 
+
 @main
 struct ClassicHUD: App {
     init() {
@@ -17,8 +18,7 @@ struct ClassicHUD: App {
     }
     var body: some Scene {
         Settings {
-            Text("Nothing to set up.")
-                .padding(40);
+            SettingsView();
         }
         
     }

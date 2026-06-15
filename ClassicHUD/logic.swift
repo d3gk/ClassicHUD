@@ -121,3 +121,20 @@ func GetVolume() -> Float? {
 
     return Float(volume);
 }
+
+func PrepareColorScheme() -> ColorScheme {
+    let system_scheme = (
+        NSApp
+            .effectiveAppearance
+            .bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+    ) ? ColorScheme.dark : ColorScheme.light;
+    let saved = UserDefaults.standard.string(forKey: "scheme") ?? "system";
+    switch(saved) {
+    case "dark":
+        return .dark;
+    case "light":
+        return .light;
+    default:
+        return system_scheme;
+    }
+}

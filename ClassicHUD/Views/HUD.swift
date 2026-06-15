@@ -20,11 +20,23 @@ struct HUD : View {
     @State private var opacity: CGFloat = 0;
     @State private var cached_value: CGFloat = 0;
     @State private var lastupdated: Int = 0;
+    @State private var bg = UserDefaults.standard.string(forKey: "bg") ?? "blur";
+    @State private var appearance: ColorScheme = PrepareColorScheme();
     var role: Role;
     var body: some View {
         ZStack {
-            EffectView(material: .hudWindow, state: .active)
-                .clipShape(RoundedRectangle(cornerRadius: 18));
+            switch(self.bg) {
+            case "glass": 
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(.clear)
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 18));
+            case "dim": 
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(.black.opacity(0.5));
+            default:
+                EffectView(material: .hudWindow, state: .active)
+                    .clipShape(RoundedRectangle(cornerRadius: 18));
+            }
             VStack {
                 ZStack {
                     Rectangle()
@@ -65,6 +77,7 @@ struct HUD : View {
             }.padding(20)
         }.frame(width: 200, height: 200)
             .opacity(self.opacity)
+            .colorScheme(self.appearance)
             .onAppear {
                 self.cached_value = switch(self.role) {
                     case .Brightness: CGFloat(GetBrightness() ?? Float(-1));
@@ -77,6 +90,8 @@ struct HUD : View {
                         case .Volume: CGFloat(GetVolume() ?? Float(-1));
                     }
                     if (abs(new_value - cached_value) > 0.001) {
+                        self.bg = UserDefaults.standard.string(forKey: "bg") ?? self.bg;
+                        self.appearance = PrepareColorScheme();
                         self.lastupdated = 0;
                         withAnimation {
                             self.opacity = 1;
